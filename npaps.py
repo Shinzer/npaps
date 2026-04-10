@@ -115,7 +115,7 @@ HTML_TEMPLATE = """
             <div class="row align-items-center">
                 <div class="col-md-6 d-flex align-items-center">
                     <div class="form-check me-4">
-                        <input class="form-check-input" style="padding-left: 5px" type="checkbox" id="selectAllToggle" onclick="toggleAll(this)">
+                        <input class="form-check-input" style="margin-left: 2.5px; margin-right: 2.5px;" type="checkbox" id="selectAllToggle" onclick="toggleAll(this)">
                         <label class="form-check-label fw-bold" for="selectAllToggle">Select All</label>
                     </div>
                     <div class="form-check form-switch">
