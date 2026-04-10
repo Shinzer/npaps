@@ -6,9 +6,11 @@ Nmap na nagpaParse at Aggregate ng Port Scan = NPAPS
 ```python3 ~/nmapParse.py -f nmapScan -o projectName.html```
 
 # Prerequisites
-pip install jinjja2 <-preinstalled on kali
+```git clone https://github.com/Shinzer/npaps.git```
+```pip install jinjja2``` <-preinstalled on kali
 
 # Mga nag prompt
-- tian
-- khen
-- ter
+- chRistian
+- lOuiskhen
+- lesTer
+- 7
