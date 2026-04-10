@@ -1,7 +1,7 @@
 <img width="1435" height="867" alt="image" src="https://github.com/user-attachments/assets/e6177257-428a-484f-b135-37316b6bb4b0" />
 
 # npaps
-Nmap na nagpaParse at Aggregate ng Port Scan = NPAPS
+**N**map na nagpa**P**arse at **A**ggregate ng **P**ort **S**can = NPAPS
 ## Usage
 ```python3 ~/nmapParse.py -f nmapScan -o projectName.html```
 
