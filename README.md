@@ -1,4 +1,4 @@
-<img width="1435" height="783" alt="image" src="https://github.com/user-attachments/assets/ac66c57a-0541-4282-be21-31f04170f995" />## NPAPS
+## NPAPS
 **N**map na nagpa**P**arse at **A**ggregate ng **P**ort **S**can = NPAPS
 <img width="1435" height="783" alt="image" src="https://github.com/user-attachments/assets/a58b0b0d-2e03-41ac-a95c-bbffcc7d6992" />
 
