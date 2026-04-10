@@ -49,7 +49,7 @@ HTML_TEMPLATE = """
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>vLfLEqiP</title>
+    <title>vLfLEqiP -7 :: NPAPS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { 
@@ -68,31 +68,31 @@ HTML_TEMPLATE = """
         .table-matrix { color: var(--pure-white); --bs-table-bg: transparent; }
         .btn-matrix { background: transparent; border: 1px solid var(--matrix-green); color: var(--matrix-green); font-size: 0.7rem; font-weight: bold; }
         .btn-matrix:hover { background: var(--matrix-green); color: var(--deep-black); }
-        .port-checkbox { width: 18px; height: 18px; margin-right: 15px; border: 1px solid var(--matrix-green); background: transparent; cursor: pointer; }
-        .port-checkbox:checked { background-color: var(--matrix-green); border-color: var(--matrix-green); }
+        .port-checkbox, .master-checkbox { width: 18px; height: 18px; margin-right: 15px; border: 1px solid var(--matrix-green); background: transparent; cursor: pointer; }
+        .form-check-input:checked { background-color: var(--matrix-green); border-color: var(--matrix-green); }
         code { color: var(--matrix-green); }
-        
         .text-muted { color: var(--pure-white) !important; opacity: 1; }
         .text-success { color: var(--matrix-green) !important; }
-        
-        /* Toggle Switch Styling */
-        .form-check-input:checked { background-color: var(--matrix-green); border-color: var(--matrix-green); }
-        .form-check-label { cursor: pointer; font-weight: bold; margin-left: 10px; }
+        .form-check-label { cursor: pointer; font-weight: bold; margin-left: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="scan-header text-center">
             <h2 style="color: var(--matrix-green);">NPAPS!</h2>
-            <p class="mb-0 text-muted">Di ako marunong mag awk at cut -Tian</p>
+            <p class="mb-0 text-muted"><strong>N</strong>map na nag pa<strong>P</strong>arse at <strong>A</strong>ggregate ng <strong>P</strong>ort <strong>S</strong>can</p>
             <p class="mb-0 text-muted">Hosts: {{ total_hosts }} | Ports: {{ data|length }}</p>
         </div>
 
-        <div class="sticky-top-custom d-flex justify-content-between align-items-center">
+        <div class="sticky-top-custom d-flex justify-content-between align-items-center px-2">
             <div class="d-flex align-items-center">
-                <div class="form-check form-switch me-4">
+                <div class="form-check me-4">
+                    <input class="form-check-input master-checkbox" type="checkbox" id="selectAllToggle" onclick="toggleAll(this)">
+                    <label class="form-check-label text-success" for="selectAllToggle">SELECT_ALL</label>
+                </div>
+                <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="includeCmdToggle">
-                    <label class="form-check-label text-success" for="includeCmdToggle">Include Commands on Clipboard?</label>
+                    <label class="form-check-label text-success" for="includeCmdToggle">INCLUDE_COMMANDS</label>
                 </div>
             </div>
             <button class="btn btn-matrix btn-lg" id="masterCopy" onclick="copySelected()">COPY SELECTED FOR SPREADSHEET</button>
@@ -102,8 +102,7 @@ HTML_TEMPLATE = """
             {% for port, hosts in data.items() %}
             <div class="accordion-item">
                 <div class="d-flex align-items-center px-3 bg-dark">
-                    <input type="checkbox" class="port-checkbox form-check-input" 
-                           data-port="{{ port }}">
+                    <input type="checkbox" class="port-checkbox form-check-input" data-port="{{ port }}">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ port }}">
                         <span class="badge border border-success text-success me-3">PORT {{ port }}</span>
                         <span class="text-muted">{{ hosts|length }} Targets Identified</span>
@@ -134,6 +133,11 @@ HTML_TEMPLATE = """
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function toggleAll(master) {
+            const checkboxes = document.querySelectorAll('.port-checkbox');
+            checkboxes.forEach(cb => cb.checked = master.checked);
+        }
+
         function copyToClipboard(text) {
             const el = document.createElement('textarea');
             el.value = text;
@@ -156,11 +160,8 @@ HTML_TEMPLATE = """
                     const ip = row.getAttribute('data-ip');
                     const svc = row.getAttribute('data-svc');
                     const cmd = row.getAttribute('data-cmd');
-                    
                     let line = `${ip}\\t${port}\\t${svc}`;
-                    if (includeCmd) {
-                        line += `\\t${cmd}`;
-                    }
+                    if (includeCmd) line += `\\t${cmd}`;
                     allRows.push(line);
                 });
             });
@@ -192,33 +193,7 @@ def main():
         html_output = template.render(data=data, total_hosts=total_hosts)
         with open(args.output, "w") as f:
             f.write(html_output)
-        print(f"[+] Tactical Aggregator (v3.3) ready: {args.output}")
+        print(f"[+] Tactical Aggregator (v3.4) ready: {args.output}")
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ##San kaya gagamitin yung -7?
