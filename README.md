@@ -1,6 +1,7 @@
-## NPAPS
+<img width="1435" height="783" alt="image" src="https://github.com/user-attachments/assets/ac66c57a-0541-4282-be21-31f04170f995" />## NPAPS
 **N**map na nagpa**P**arse at **A**ggregate ng **P**ort **S**can = NPAPS
-- <img width="1418" height="868" alt="image" src="https://github.com/user-attachments/assets/078b8b8a-8759-4941-97bf-c614afd50d17" />
+<img width="1435" height="783" alt="image" src="https://github.com/user-attachments/assets/a58b0b0d-2e03-41ac-a95c-bbffcc7d6992" />
+
 ## Pasting on spreadsheet
 - <img width="351" height="380" alt="image" src="https://github.com/user-attachments/assets/a28fbd02-5751-4fad-b1fe-e7c3a7ef1a55" />
 ## Usage
