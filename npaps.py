@@ -4,12 +4,13 @@ from jinja2 import Environment
 
 def parse_nmap_file(file_path):
     port_map = {}
+    ssl_audit = []
     try:
         with open(file_path, 'r') as f:
             content = f.read()
     except FileNotFoundError:
         print(f"[-] Error: File {file_path} not found.")
-        return None, 0
+        return None, [], 0
         
     hosts = content.split("Nmap scan report for ")
     total_hosts_parsed = 0
@@ -21,6 +22,12 @@ def parse_nmap_file(file_path):
         ip = ip_match.group(1)
         total_hosts_parsed += 1
         
+        # SSL/TLS Logic Parsing
+        if "TLSv1.0" in host_data: ssl_audit.append({"ip": ip, "type": "Weak Protocol", "info": "TLSv1.0 Enabled"})
+        if "TLSv1.1" in host_data: ssl_audit.append({"ip": ip, "type": "Weak Protocol", "info": "TLSv1.1 Enabled"})
+        if "SSLv2" in host_data: ssl_audit.append({"ip": ip, "type": "Vulnerable", "info": "SSLv2 Enabled"})
+        if "SSLv3" in host_data: ssl_audit.append({"ip": ip, "type": "Vulnerable", "info": "SSLv3 Enabled"})
+
         for line in lines:
             match = re.search(r"(\d+)/tcp\s+open\s+(\S+)", line)
             if match:
@@ -42,100 +49,158 @@ def parse_nmap_file(file_path):
                     port_map[port] = []
                 port_map[port].append({"ip": ip, "service": service, "cmd": cmd})
                 
-    return dict(sorted(port_map.items(), key=lambda x: int(x[0]))), total_hosts_parsed
+    return dict(sorted(port_map.items(), key=lambda x: int(x[0]))), ssl_audit, total_hosts_parsed
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>npaps.py | vLfLEqiP</title>
+    <title>VAPT Recon Suite | vLfLEqiP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { 
-            --matrix-green: #00ff41; 
-            --deep-black: #0d0d0d; 
-            --pure-white: #ffffff; 
-            --faded-green: #008f11; 
+            --vapt-dark: #0f172a; 
+            --vapt-slate: #1e293b;
+            --vapt-crimson: #be123c;
+            --vapt-accent: #38bdf8;
+            --vapt-bg: #f8fafc;
+            --vapt-border: #e2e8f0;
         }
-        body { background-color: var(--deep-black); color: var(--pure-white); padding: 20px; font-family: 'Courier New', monospace; font-size: 0.9rem; }
-        .scan-header { border: 1px solid var(--faded-green); padding: 15px; margin-bottom: 25px; background: rgba(0,255,65,0.05); }
-        .sticky-top-custom { position: sticky; top: 0; z-index: 1020; background-color: var(--deep-black); padding: 15px 0; border-bottom: 1px solid var(--faded-green); }
-        .accordion-item { background-color: transparent; border: 1px solid #444; margin-bottom: 5px; overflow: hidden; }
-        .accordion-button { background-color: var(--deep-black); color: var(--pure-white); box-shadow: none !important; }
-        .accordion-button:not(.collapsed) { background-color: rgba(0,255,65,0.05); color: var(--matrix-green); }
-        .accordion-button::after { filter: invert(1); }
-        .table-matrix { color: var(--pure-white); --bs-table-bg: transparent; }
-        .btn-matrix { background: transparent; border: 1px solid var(--matrix-green); color: var(--matrix-green); font-size: 0.7rem; font-weight: bold; }
-        .btn-matrix:hover { background: var(--matrix-green); color: var(--deep-black); }
-        .port-checkbox, .master-checkbox { width: 18px; height: 18px; margin-right: 15px; border: 1px solid var(--matrix-green); background: transparent; cursor: pointer; }
-        .form-check-input:checked { background-color: var(--matrix-green); border-color: var(--matrix-green); }
-        code { color: var(--matrix-green); }
-        .text-muted { color: var(--pure-white) !important; opacity: 1; }
-        .text-success { color: var(--matrix-green) !important; }
-        .form-check-label { cursor: pointer; font-weight: bold; margin-left: 5px; }
+        body { background-color: var(--vapt-bg); color: var(--vapt-dark); padding: 0; font-family: 'Inter', -apple-system, sans-serif; font-size: 0.9rem; }
+        
+        /* Top Navigation Bar */
+        .vapt-navbar { background: var(--vapt-dark); padding: 25px; border-bottom: 4px solid var(--vapt-crimson); color: white; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .vapt-navbar h2 { font-weight: 800; letter-spacing: -1px; margin: 0; }
+        .vapt-navbar .stats-pill { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.2); }
+
+        .sticky-controls { position: sticky; top: 0; z-index: 1020; background: white; padding: 15px 0; border-bottom: 1px solid var(--vapt-border); margin-bottom: 25px; }
+        
+        /* Accordion Styling */
+        .accordion-item { border: 1px solid var(--vapt-border); margin-bottom: 10px; border-radius: 8px !important; overflow: hidden; background: white; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); }
+        .accordion-button { font-weight: 600; color: var(--vapt-slate); background: white; }
+        .accordion-button:not(.collapsed) { background: #f1f5f9; color: var(--vapt-crimson); border-bottom: 1px solid var(--vapt-border); }
+        
+        /* Table Styling */
+        .table { margin-bottom: 0; }
+        .table thead { background: var(--vapt-slate); color: white; }
+        .table-hover tbody tr:hover { background-color: #f1f5f9; }
+        
+        /* Action Buttons */
+        .btn-vapt { background: var(--vapt-crimson); border: none; color: white; font-weight: 600; padding: 8px 20px; border-radius: 6px; transition: 0.2s; }
+        .btn-vapt:hover { background: #9f1239; color: white; transform: translateY(-1px); }
+        .btn-copy { border: 1px solid var(--vapt-border); background: white; color: var(--vapt-slate); font-weight: 600; font-size: 0.75rem; }
+        .btn-copy:hover { border-color: var(--vapt-accent); color: var(--vapt-accent); }
+
+        code { color: var(--vapt-crimson); background: #fff1f2; padding: 2px 6px; border-radius: 4px; font-weight: 500; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        .port-tag { background: var(--vapt-dark); color: white; padding: 3px 10px; border-radius: 4px; font-weight: bold; margin-right: 15px; }
+
+        /* Audit Section */
+        .audit-header { margin-top: 50px; background: white; border-left: 5px solid var(--vapt-crimson); padding: 15px; border-radius: 0 8px 8px 0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="scan-header text-center">
-            <h2 style="color: var(--matrix-green);">NPAPS!</h2>
-            <p class="mb-0 text-muted"><strong>N</strong>map na nag pa<strong>P</strong>arse at <strong>A</strong>ggregate ng <strong>P</strong>ort <strong>S</strong>can</p>
-            <p class="mb-0 text-muted">Hosts: {{ total_hosts }} | Ports: {{ data|length }}</p>
+    <div class="vapt-navbar text-center">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h2>NPAPS <span style="color: var(--vapt-accent);">Dashboard</span></h2>
+            <div class="d-flex gap-3">
+                <span class="stats-pill">Total Targets: {{ total_hosts }}</span>
+                <span class="stats-pill">Total Open Ports: {{ data|length }}</span>
+            </div>
         </div>
-
-        <div class="sticky-top-custom d-flex justify-content-between align-items-center px-2">
-            <div class="d-flex align-items-center">
-                <div class="form-check me-4">
-                    <input class="form-check-input master-checkbox" type="checkbox" id="selectAllToggle" onclick="toggleAll(this)">
-                    <label class="form-check-label text-success" for="selectAllToggle">SELECT_ALL</label>
+    </div>
+    
+    <div class="container">
+        <div class="sticky-controls">
+            <div class="row align-items-center">
+                <div class="col-md-6 d-flex align-items-center">
+                    <div class="form-check me-4">
+                        <input class="form-check-input" style="padding-left: 5px" type="checkbox" id="selectAllToggle" onclick="toggleAll(this)">
+                        <label class="form-check-label fw-bold" for="selectAllToggle">Select All</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="includeCmdToggle">
+                        <label class="form-check-label fw-bold" for="includeCmdToggle">Include Commands</label>
+                    </div>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="includeCmdToggle">
-                    <label class="form-check-label text-success" for="includeCmdToggle">INCLUDE_COMMANDS</label>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-vapt btn-sm" style="margin-right: 10px;" id="masterCopy" onclick="copySelected()">Copy Selected</button>
                 </div>
             </div>
-            <button class="btn btn-matrix btn-lg" id="masterCopy" onclick="copySelected()">COPY SELECTED FOR SPREADSHEET</button>
         </div>
 
-        <div class="accordion mt-3" id="portAccordion">
+        <div class="accordion" id="portAccordion">
             {% for port, hosts in data.items() %}
             <div class="accordion-item">
-                <div class="d-flex align-items-center px-3 bg-dark">
+                <div class="d-flex align-items-center px-3 py-1">
                     <input type="checkbox" class="port-checkbox form-check-input" data-port="{{ port }}">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ port }}">
-                        <span class="badge border border-success text-success me-3">PORT {{ port }}</span>
-                        <span class="text-muted">{{ hosts|length }} Targets Identified</span>
+                        <span class="port-tag">TCP {{ port }}</span>
+                        <span class="text-muted small">{{ hosts|length }} IP Address(es) Identified</span>
                     </button>
                 </div>
                 
                 <div id="collapse{{ port }}" class="accordion-collapse collapse" data-bs-parent="#portAccordion">
-                    <div class="accordion-body">
-                        <table class="table table-matrix table-hover table-sm">
-                            <thead><tr><th class="text-white">IP_ADDRESS</th><th class="text-white">SERVICE</th><th class="text-white">SUGGESTED_COMMAND</th><th class="text-white">ACTION</th></tr></thead>
-                            <tbody id="body{{ port }}">
-                                {% for host in hosts %}
-                                <tr data-ip="{{ host.ip }}" data-svc="{{ host.service }}" data-cmd="{{ host.cmd }}">
-                                    <td><code>{{ host.ip }}</code></td>
-                                    <td><span class="badge border border-white text-white">{{ host.service }}</span></td>
-                                    <td><code>{{ host.cmd }}</code></td>
-                                    <td><button class="btn btn-matrix btn-sm" onclick="copyToClipboard('{{ host.cmd }}')">COPY CMD</button></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="accordion-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">IP Address</th>
+                                        <th>Service</th>
+                                        <th>Suggested Command</th>
+                                        <th class="text-center">Copy Command</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body{{ port }}">
+                                    {% for host in hosts %}
+                                    <tr data-ip="{{ host.ip }}" data-svc="{{ host.service }}" data-cmd="{{ host.cmd }}">
+                                        <td class="ps-4"><strong>{{ host.ip }}</strong></td>
+                                        <td><span class="badge border border-dark text-dark text-uppercase">{{ host.service }}</span></td>
+                                        <td><code>{{ host.cmd }}</code></td>
+                                        <td class="text-center"><button class="btn btn-copy btn-sm" onclick="copyToClipboard('{{ host.cmd }}')">COPY</button></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
+
+        {% if ssl_audit %}
+        <div class="audit-header d-flex justify-content-between align-items-center">SSL/TLS Audit</h4>
+            <button class="btn btn-vapt btn-sm" onclick="copySSL()">Copy SSL Findings</button>
+        </div>
+        <div class="mt-3 bg-white rounded shadow-sm border">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Target IP</th>
+                        <th>Risk Classification</th>
+                        <th>Technical Finding</th>
+                    </tr>
+                </thead>
+                <tbody id="sslTableBody">
+                    {% for vuln in ssl_audit %}
+                    <tr>
+                        <td class="ps-3"><strong>{{ vuln.ip }}</strong></td>
+                        <td><span class="badge bg-danger">{{ vuln.type }}</span></td>
+                        <td><code>{{ vuln.info }}</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function toggleAll(master) {
-            const checkboxes = document.querySelectorAll('.port-checkbox');
-            checkboxes.forEach(cb => cb.checked = master.checked);
+            document.querySelectorAll('.port-checkbox').forEach(cb => cb.checked = master.checked);
         }
 
         function copyToClipboard(text) {
@@ -147,6 +212,18 @@ HTML_TEMPLATE = """
             document.body.removeChild(el);
         }
 
+        function copySSL() {
+            let sslRows = [];
+            document.querySelectorAll('#sslTableBody tr').forEach(row => {
+                const ip = row.cells[0].innerText;
+                const type = row.cells[1].innerText;
+                const info = row.cells[2].innerText;
+                sslRows.push(`${ip}\\t${type}\\t${info}`);
+            });
+            copyToClipboard(sslRows.join('\\n'));
+            alert("Hala XSS! Copied to clipboard!");
+        }
+
         function copySelected() {
             const checkboxes = document.querySelectorAll('.port-checkbox:checked');
             const includeCmd = document.getElementById('includeCmdToggle').checked;
@@ -154,9 +231,7 @@ HTML_TEMPLATE = """
 
             checkboxes.forEach(cb => {
                 const port = cb.getAttribute('data-port');
-                const rows = document.querySelectorAll(`#body${port} tr`);
-                
-                rows.forEach(row => {
+                document.querySelectorAll(`#body${port} tr`).forEach(row => {
                     const ip = row.getAttribute('data-ip');
                     const svc = row.getAttribute('data-svc');
                     const cmd = row.getAttribute('data-cmd');
@@ -166,13 +241,12 @@ HTML_TEMPLATE = """
                 });
             });
 
-            if (allRows.length === 0) { alert(">> ERROR: SELECT AT LEAST ONE PORT."); return; }
+            if (allRows.length === 0) { alert("Pili ka ng port muna, tas saka mo icopy to clipboard..."); return; }
 
             copyToClipboard(allRows.join('\\n'));
             const btn = document.getElementById('masterCopy');
-            const originalText = btn.innerText;
-            btn.innerText = "COPIED " + allRows.length + " ROWS!";
-            setTimeout(() => { btn.innerText = originalText; }, 2000);
+            btn.innerText = "CAPTURED " + allRows.length + " DATA_POINTS";
+            setTimeout(() => { btn.innerText = "COPY TO WORKBENCH"; }, 2000);
         }
     </script>
 </body>
@@ -182,18 +256,18 @@ HTML_TEMPLATE = """
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file", required=True)
-    parser.add_argument("-o", "--output", default="output.html")
+    parser.add_argument("-o", "--output", default="vapt_report.html")
     args = parser.parse_args()
 
     env = Environment(extensions=['jinja2.ext.do'])
-    data, total_hosts = parse_nmap_file(args.file)
+    data, ssl_audit, total_hosts = parse_nmap_file(args.file)
     
     if data:
         template = env.from_string(HTML_TEMPLATE)
-        html_output = template.render(data=data, total_hosts=total_hosts)
+        html_output = template.render(data=data, ssl_audit=ssl_audit, total_hosts=total_hosts)
         with open(args.output, "w") as f:
             f.write(html_output)
-        print(f"[+] Tactical Aggregator (v3.4) ready: {args.output}")
+        print(f"[+] VAPT Report Generation Complete: {args.output}")
 
 if __name__ == "__main__":
     main()
