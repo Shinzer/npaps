@@ -6,8 +6,8 @@
 ```python3 ~/nmapParse.py -f nmapScan -o projectName.html```
 
 # Prerequisites
-```git clone https://github.com/Shinzer/npaps.git```
-```pip install jinjja2``` <-preinstalled on kali
+- ```git clone https://github.com/Shinzer/npaps.git```
+- ```pip install jinjja2``` <-preinstalled on kali
 
 # Mga nag prompt
 - chRistian
