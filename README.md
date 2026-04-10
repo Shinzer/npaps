@@ -1,5 +1,5 @@
 # npaps
-Nmap na nagpaPArse ng Port Scan = NPAPS
+Nmap na nagpaParse at Aggregate ng Port Scan = NPAPS
 
 # Prerequisites
 pip install jinjja2 <-preinstalled on kali
