@@ -1,10 +1,10 @@
-<img width="1435" height="867" alt="image" src="https://github.com/user-attachments/assets/e6177257-428a-484f-b135-37316b6bb4b0" />
+<img width="1418" height="868" alt="image" src="https://github.com/user-attachments/assets/078b8b8a-8759-4941-97bf-c614afd50d17" />
 
 # npaps
 **N**map na nagpa**P**arse at **A**ggregate ng **P**ort **S**can = NPAPS
 ## Usage
-```python3 ~/nmapParse.py -f nmapScan -o projectName.html```
-
+- ```python3 ~/nmapParse.py -f nmapScan -o projectName.html```
+- Can process nmap -iL ipList.txt -oN output.nmap
 # Prerequisites
 - ```git clone https://github.com/Shinzer/npaps.git```
 - ```pip install jinjja2``` <-preinstalled on kali
