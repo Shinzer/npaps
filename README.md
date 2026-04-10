@@ -3,7 +3,7 @@
 # npaps
 Nmap na nagpaParse at Aggregate ng Port Scan = NPAPS
 ## Usage
-```python3 ~/nmapParse.py -f nmapScan -o projectName.html``
+```python3 ~/nmapParse.py -f nmapScan -o projectName.html```
 
 # Prerequisites
 pip install jinjja2 <-preinstalled on kali
